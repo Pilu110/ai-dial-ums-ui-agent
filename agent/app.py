@@ -59,14 +59,25 @@ async def lifespan(app: FastAPI):
             tool_name_client_map[tool["function"]["name"]] = fetch_client
         logger.info(f"Connected to Fetch MCP, loaded {len(fetch_tools)} tools")
 
-        # Initialize DuckDuckGo MCP Client
-        logger.info("Connecting to DuckDuckGo MCP Server...")
-        duckduckgo_client = await StdioMCPClient.create("mcp/duckduckgo:latest")
-        duckduckgo_tools = await duckduckgo_client.get_tools()
-        tools.extend(duckduckgo_tools)
-        for tool in duckduckgo_tools:
-            tool_name_client_map[tool["function"]["name"]] = duckduckgo_client
-        logger.info(f"Connected to DuckDuckGo MCP, loaded {len(duckduckgo_tools)} tools")
+        # Initialize DuckDuckGo MCP Client (Optional - requires Docker)
+        # Set ENABLE_DUCKDUCKGO=false to skip this client
+        enable_duckduckgo = os.getenv("ENABLE_DUCKDUCKGO", "true").lower() == "true"
+
+        if enable_duckduckgo:
+            logger.info("Connecting to DuckDuckGo MCP Server...")
+            try:
+                duckduckgo_client = await StdioMCPClient.create("mcp/duckduckgo:latest")
+                duckduckgo_tools = await duckduckgo_client.get_tools()
+                tools.extend(duckduckgo_tools)
+                for tool in duckduckgo_tools:
+                    tool_name_client_map[tool["function"]["name"]] = duckduckgo_client
+                logger.info(f"Connected to DuckDuckGo MCP, loaded {len(duckduckgo_tools)} tools")
+            except FileNotFoundError as e:
+                logger.warning("DuckDuckGo MCP Server not available (Docker not found). Continuing without it.")
+            except Exception as e:
+                logger.warning(f"Failed to connect to DuckDuckGo MCP Server: {e}. Continuing without it.")
+        else:
+            logger.info("DuckDuckGo MCP Client disabled (ENABLE_DUCKDUCKGO=false)")
 
         logger.info(f"Total tools loaded: {len(tools)}")
 

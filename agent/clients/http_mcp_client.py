@@ -63,7 +63,7 @@ class HttpMCPClient:
 
         logger.debug(f"Calling tool on MCP server", extra={
             "tool": tool_name,
-            "args": tool_args,
+            "tool_args": tool_args,
             "url": self.server_url
         })
 

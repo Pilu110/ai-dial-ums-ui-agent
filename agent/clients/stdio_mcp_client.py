@@ -67,7 +67,7 @@ class StdioMCPClient:
 
         logger.debug(f"Calling tool on MCP server", extra={
             "tool": tool_name,
-            "args": tool_args,
+            "tool_args": tool_args,
             "docker_image": self.docker_image
         })
 
